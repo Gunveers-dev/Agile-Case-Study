@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Members')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar('Members', 'Students and staff registered with the library')}"></header>
+
+        <div class="content">
+            <form class="toolbar" th:action="@{/members}" method="get" role="search">
+                <div class="search input-icon">
+                    <i class="bi bi-search"></i>
+                    <input type="search" name="q" class="form-control" th:value="${q}"
+                           placeholder="Search by name, member ID, email or phone..." aria-label="Search members">
+                </div>
+                <select name="department" class="form-select" data-autosubmit aria-label="Filter by department">
+                    <option value="">All Departments</option>
+                    <option th:each="d : ${departments}" th:value="${d}" th:text="${d}"
+                            th:selected="${d == department}">CSE</option>
+                </select>
+                <button type="submit" class="btn btn-ghost"><i class="bi bi-funnel me-1"></i>Apply</button>
+                <a th:if="${!#strings.isEmpty(q) or !#strings.isEmpty(department)}" th:href="@{/members}" class="btn btn-ghost">Clear</a>
+                <span class="spacer"></span>
+                <a th:href="@{/members/new}" class="btn btn-terracotta"><i class="bi bi-person-plus me-1"></i>Register Member</a>
+            </form>
+
+            <div class="table-wrap">
+                <div th:if="${members.totalElements == 0}" class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-people"></i></div>
+                    <h3>No members found</h3>
+                    <p th:if="${!#strings.isEmpty(q) or !#strings.isEmpty(department)}">No member matches your search. Try another name or ID.</p>
+                    <p th:unless="${!#strings.isEmpty(q) or !#strings.isEmpty(department)}">Register the first member to start lending books.</p>
+                    <a th:href="@{/members/new}" class="btn btn-terracotta"><i class="bi bi-person-plus me-1"></i>Register Member</a>
+                </div>
+
+                <div class="table-scroll" th:if="${members.totalElements > 0}">
+                    <table class="lt-table">
+                        <thead>
+                        <tr>
+                            <th>Member ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Department</th>
+                            <th>Registered</th>
+                            <th>Books held</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${members.content}" th:attr="data-href=@{/members/{id}(id=${row.member().id})}">
+                            <td class="code" th:text="${row.member().memberCode}">STU101</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-cream" th:text="${row.member().initials}">AV</span>
+                                    <span class="cell-title" th:text="${row.member().fullName}">Ananya Verma</span>
+                                </div>
+                            </td>
+                            <td class="small" th:text="${row.member().email}">ananya@college.edu</td>
+                            <td class="small mono" th:text="${row.member().phone}">9800000000</td>
+                            <td><span class="chip" th:text="${row.member().department}">CSE</span></td>
+                            <td class="small text-muted-2 nowrap" th:text="${#temporals.format(row.member().registrationDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                            <td>
+                                <span class="lt-badge"
+                                      th:classappend="${row.activeLoans() >= 3} ? 'badge-overdue' : (${row.activeLoans() > 0} ? 'badge-loan-issued' : 'badge-out')"
+                                      th:text="${row.activeLoans()} + ' / 3'">1 / 3</span>
+                            </td>
+                            <td class="actions">
+                                <a class="action-btn" th:href="@{/members/{id}(id=${row.member().id})}" title="View profile"
+                                   aria-label="View profile"><i class="bi bi-eye"></i></a>
+                                <a class="action-btn" th:href="@{/members/{id}/edit(id=${row.member().id})}" title="Edit"
+                                   aria-label="Edit"><i class="bi bi-pencil"></i></a>
+                                <form class="d-inline" th:action="@{/members/{id}/delete(id=${row.member().id})}" method="post"
+                                      th:data-confirm="${row.activeLoans() > 0} ? ${row.member().fullName} + ' still has ' + ${row.activeLoans()} + ' book(s). LibraTrack will block the deletion until they are returned. Continue?' : 'Remove ' + ${row.member().fullName} + ' from the library? Their returned-loan history will also be removed.'"
+                                      data-confirm-title="Delete member?" data-confirm-button="Delete member">
+                                    <button type="submit" class="action-btn danger" title="Delete" aria-label="Delete">
+                                        <i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer" th:if="${members.totalElements > 0}">
+                    <span th:text="'Showing ' + ${members.number * members.size + 1} + '–' + ${members.number * members.size + members.numberOfElements} + ' of ' + ${members.totalElements} + ' members'">Showing 1–10 of 12 members</span>
+                    <ul class="lt-pagination" th:if="${members.totalPages > 1}">
+                        <li th:classappend="${members.first} ? 'disabled'">
+                            <span th:if="${members.first}"><i class="bi bi-chevron-left"></i></span>
+                            <a th:unless="${members.first}" aria-label="Previous page"
+                               th:href="@{/members(q=${q},department=${department},page=${members.number - 1})}"><i class="bi bi-chevron-left"></i></a>
+                        </li>
+                        <li th:each="i : ${#numbers.sequence(0, members.totalPages - 1)}"
+                            th:classappend="${i == members.number} ? 'current'">
+                            <span th:if="${i == members.number}" th:text="${i + 1}">1</span>
+                            <a th:unless="${i == members.number}" th:text="${i + 1}"
+                               th:href="@{/members(q=${q},department=${department},page=${i})}">2</a>
+                        </li>
+                        <li th:classappend="${members.last} ? 'disabled'">
+                            <span th:if="${members.last}"><i class="bi bi-chevron-right"></i></span>
+                            <a th:unless="${members.last}" aria-label="Next page"
+                               th:href="@{/members(q=${q},department=${department},page=${members.number + 1})}"><i class="bi bi-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

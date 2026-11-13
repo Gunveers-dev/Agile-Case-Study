@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${book.title})}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar('Book Details', 'Copies, availability and borrowing history')}"></header>
+
+        <div class="content">
+            <nav class="crumbs" aria-label="Breadcrumb">
+                <a th:href="@{/books}">Books</a><i class="bi bi-chevron-right"></i>
+                <span th:text="${book.title}">Clean Code</span>
+            </nav>
+
+            <section class="lt-card mb-4">
+                <div class="profile-head">
+                    <div class="book-cover"><i class="bi bi-book"></i></div>
+                    <div>
+                        <div class="small-caps" th:text="${book.bookCode} + ' · ' + ${book.category}">BK001 · Programming</div>
+                        <h2 th:text="${book.title}">Clean Code</h2>
+                        <div class="meta" th:text="'by ' + ${book.author}">by Robert C. Martin</div>
+                        <span class="lt-badge mt-2" th:classappend="${row.status().cssClass}" th:text="${row.status().label}">Available</span>
+                    </div>
+                    <div class="actions">
+                        <a th:href="@{/circulation(tab='issue', bookId=${book.id})}" class="btn btn-terracotta"
+                           th:classappend="${book.availableQuantity <= 0} ? 'disabled'"
+                           th:attr="aria-disabled=${book.availableQuantity <= 0}">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Issue this book</a>
+                        <a th:href="@{/books/{id}/edit(id=${book.id})}" class="btn btn-ghost"><i class="bi bi-pencil me-1"></i>Edit</a>
+                        <form th:action="@{/books/{id}/delete(id=${book.id})}" method="post" class="d-inline"
+                              th:data-confirm="'Delete ' + ${book.title} + '? Its returned-loan history will also be removed. This cannot be undone.'"
+                              data-confirm-title="Delete book?" data-confirm-button="Delete book">
+                            <button type="submit" class="btn btn-soft-danger"><i class="bi bi-trash3 me-1"></i>Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <div class="row g-4">
+                <div class="col-xl-4">
+                    <section class="lt-card h-100">
+                        <h3 class="lt-card-title mb-3">Inventory</h3>
+                        <div class="mini-stats mb-3">
+                            <div class="mini-stat"><strong th:text="${book.totalQuantity}">8</strong><span>Total copies</span></div>
+                            <div class="mini-stat"><strong th:text="${book.availableQuantity}">5</strong><span>On shelf</span></div>
+                            <div class="mini-stat"><strong th:text="${row.activeLoans()}">3</strong><span>On loan</span></div>
+                        </div>
+                        <ul class="info-list">
+                            <li><span class="label">ISBN</span><span class="value mono" th:text="${book.isbn}">9780132350884</span></li>
+                            <li><span class="label">Publisher</span><span class="value" th:text="${book.publisher ?: '—'}">Prentice Hall</span></li>
+                            <li><span class="label">Category</span><span class="value" th:text="${book.category}">Programming</span></li>
+                            <li><span class="label">Added on</span>
+                                <span class="value" th:text="${book.createdAt != null} ? ${#temporals.format(book.createdAt, 'dd MMM yyyy')} : '—'">01 Jan 2026</span></li>
+                            <li><span class="label">Times borrowed</span><span class="value" th:text="${#lists.size(history)}">12</span></li>
+                        </ul>
+                    </section>
+                </div>
+
+                <div class="col-xl-8">
+                    <section class="table-wrap h-100">
+                        <div class="lt-card-header px-4 pt-4">
+                            <h2>Borrowing history</h2>
+                            <span class="small text-muted-2" th:text="${#lists.size(history)} + ' transactions'">12 transactions</span>
+                        </div>
+                        <div th:if="${#lists.isEmpty(history)}" class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-clock-history"></i></div>
+                            <h3>Never borrowed yet</h3>
+                            <p>Transactions for this book will appear here once it is issued.</p>
+                        </div>
+                        <div class="table-scroll" th:unless="${#lists.isEmpty(history)}">
+                            <table class="lt-table">
+                                <thead>
+                                <tr><th>Txn</th><th>Member</th><th>Issued</th><th>Due</th><th>Returned</th><th>Fine</th><th>Status</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="loan : ${history}" th:attr="data-href=@{/members/{id}(id=${loan.member.id})}">
+                                    <td class="code" th:text="${loan.transactionCode}">TXN-0001</td>
+                                    <td><span class="cell-title" th:text="${loan.member.fullName}">Ananya Verma</span>
+                                        <span class="cell-sub" th:text="${loan.member.memberCode}">STU101</span></td>
+                                    <td class="nowrap" th:text="${#temporals.format(loan.issueDate, 'dd MMM yyyy')}">01 Nov 2026</td>
+                                    <td class="nowrap" th:text="${#temporals.format(loan.dueDate, 'dd MMM yyyy')}">15 Nov 2026</td>
+                                    <td class="nowrap" th:text="${loan.returnDate != null} ? ${#temporals.format(loan.returnDate, 'dd MMM yyyy')} : '—'">—</td>
+                                    <td class="qty" th:text="'₹' + ${#numbers.formatInteger(loan.fineAmount, 1, 'COMMA')}">₹0</td>
+                                    <td><span class="lt-badge"
+                                              th:classappend="${loan.currentStatus.name() == 'RETURNED'} ? 'badge-returned' : (${loan.currentStatus.name() == 'OVERDUE'} ? 'badge-overdue' : 'badge-loan-issued')"
+                                              th:text="${loan.currentStatus.label}">Returned</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

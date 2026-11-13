@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Books')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar('Books', 'Manage your library book collection')}"></header>
+
+        <div class="content">
+            <form class="toolbar" th:action="@{/books}" method="get" role="search">
+                <div class="search input-icon">
+                    <i class="bi bi-search"></i>
+                    <input type="search" name="q" class="form-control" th:value="${q}"
+                           placeholder="Search by title, author, ISBN or book ID..." aria-label="Search books">
+                </div>
+                <select name="category" class="form-select" data-autosubmit aria-label="Filter by category">
+                    <option value="">All Categories</option>
+                    <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"
+                            th:selected="${c == category}">Programming</option>
+                </select>
+                <select name="status" class="form-select" data-autosubmit aria-label="Filter by availability">
+                    <option value="">All Status</option>
+                    <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}"
+                            th:selected="${s.name() == status}">Available</option>
+                </select>
+                <button type="submit" class="btn btn-ghost"><i class="bi bi-funnel me-1"></i>Apply</button>
+                <a th:if="${!#strings.isEmpty(q) or !#strings.isEmpty(category) or !#strings.isEmpty(status)}"
+                   th:href="@{/books}" class="btn btn-ghost">Clear</a>
+                <span class="spacer"></span>
+                <a th:href="@{/books/new}" class="btn btn-terracotta"><i class="bi bi-plus-lg me-1"></i>Add Book</a>
+            </form>
+
+            <div class="table-wrap">
+                <div th:if="${books.totalElements == 0}" class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-journal-x"></i></div>
+                    <h3>No books found</h3>
+                    <p th:if="${!#strings.isEmpty(q) or !#strings.isEmpty(category) or !#strings.isEmpty(status)}">
+                        Nothing matches your search or filters. Try different keywords or clear the filters.</p>
+                    <p th:unless="${!#strings.isEmpty(q) or !#strings.isEmpty(category) or !#strings.isEmpty(status)}">
+                        Your catalogue is empty. Add the first book to get started.</p>
+                    <a th:href="@{/books/new}" class="btn btn-terracotta"><i class="bi bi-plus-lg me-1"></i>Add Book</a>
+                </div>
+
+                <div class="table-scroll" th:if="${books.totalElements > 0}">
+                    <table class="lt-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>ISBN</th>
+                            <th>Category</th>
+                            <th>Publisher</th>
+                            <th>Available</th>
+                            <th>Status</th>
+                            <th>Added</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${books.content}" th:attr="data-href=@{/books/{id}(id=${row.book().id})}">
+                            <td class="code" th:text="${row.book().bookCode}">BK001</td>
+                            <td class="cell-title" th:text="${row.book().title}">Clean Code</td>
+                            <td th:text="${row.book().author}">Robert C. Martin</td>
+                            <td class="mono small" th:text="${row.book().isbn}">9780132350884</td>
+                            <td><span class="chip" th:text="${row.book().category}">Programming</span></td>
+                            <td class="small text-muted-2" th:text="${row.book().publisher ?: '—'}">Prentice Hall</td>
+                            <td class="qty"><span th:text="${row.book().availableQuantity}">5</span> <small>/ <span th:text="${row.book().totalQuantity}">8</span></small></td>
+                            <td><span class="lt-badge" th:classappend="${row.status().cssClass}"
+                                      th:text="${row.status().label}">Available</span></td>
+                            <td class="small text-muted-2 nowrap"
+                                th:text="${row.book().createdAt != null} ? ${#temporals.format(row.book().createdAt, 'dd MMM yyyy')} : '—'">01 Jan 2026</td>
+                            <td class="actions">
+                                <a class="action-btn" th:href="@{/books/{id}(id=${row.book().id})}" title="View details"
+                                   aria-label="View details"><i class="bi bi-eye"></i></a>
+                                <a class="action-btn" th:href="@{/books/{id}/edit(id=${row.book().id})}" title="Edit"
+                                   aria-label="Edit"><i class="bi bi-pencil"></i></a>
+                                <form class="d-inline" th:action="@{/books/{id}/delete(id=${row.book().id})}" method="post"
+                                      th:data-confirm="${row.activeLoans() > 0} ? ${row.activeLoans()} + ' copies of this book are on loan. LibraTrack will block the deletion until they are returned. Continue?' : 'Delete ' + ${row.book().title} + '? Its returned-loan history will also be removed. This cannot be undone.'"
+                                      data-confirm-title="Delete book?" data-confirm-button="Delete book">
+                                    <button type="submit" class="action-btn danger" title="Delete" aria-label="Delete">
+                                        <i class="bi bi-trash3"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer" th:if="${books.totalElements > 0}">
+                    <span th:text="'Showing ' + ${books.number * books.size + 1} + '–' + ${books.number * books.size + books.numberOfElements} + ' of ' + ${books.totalElements} + ' books'">Showing 1–10 of 20 books</span>
+                    <ul class="lt-pagination" th:if="${books.totalPages > 1}">
+                        <li th:classappend="${books.first} ? 'disabled'">
+                            <span th:if="${books.first}"><i class="bi bi-chevron-left"></i></span>
+                            <a th:unless="${books.first}" aria-label="Previous page"
+                               th:href="@{/books(q=${q},category=${category},status=${status},page=${books.number - 1})}"><i class="bi bi-chevron-left"></i></a>
+                        </li>
+                        <li th:each="i : ${#numbers.sequence(0, books.totalPages - 1)}"
+                            th:classappend="${i == books.number} ? 'current'">
+                            <span th:if="${i == books.number}" th:text="${i + 1}">1</span>
+                            <a th:unless="${i == books.number}" th:text="${i + 1}"
+                               th:href="@{/books(q=${q},category=${category},status=${status},page=${i})}">2</a>
+                        </li>
+                        <li th:classappend="${books.last} ? 'disabled'">
+                            <span th:if="${books.last}"><i class="bi bi-chevron-right"></i></span>
+                            <a th:unless="${books.last}" aria-label="Next page"
+                               th:href="@{/books(q=${q},category=${category},status=${status},page=${books.number + 1})}"><i class="bi bi-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

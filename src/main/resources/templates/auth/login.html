@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body>
+<div class="login-page">
+
+    <!-- Left: brand and illustration -->
+    <section class="login-hero" aria-hidden="false">
+        <img class="hero-art" th:src="@{/images/login-library.svg}" alt="">
+        <div class="brand"><i class="bi bi-book-half"></i> LibraTrack</div>
+        <div class="hero-copy">
+            <h1>Library Management System</h1>
+            <div class="hero-rule"></div>
+            <p>Manage Books, Members, Issues and Returns Efficiently</p>
+            <div class="hero-rule"></div>
+        </div>
+    </section>
+
+    <!-- Right: sign-in form -->
+    <section class="login-panel">
+        <div class="login-card">
+            <div class="book-mark"><i class="bi bi-book"></i></div>
+            <h2>Welcome Back</h2>
+            <p class="lead-text">Login to continue to LibraTrack</p>
+
+            <div th:if="${param.error}" class="login-alert error" role="alert">
+                <i class="bi bi-exclamation-circle"></i> Invalid email or password. Please try again.
+            </div>
+            <div th:if="${param.logout}" class="login-alert info" role="status">
+                <i class="bi bi-check-circle"></i> You have been logged out.
+            </div>
+
+            <form th:action="@{/login}" method="post" novalidate>
+                <div class="mb-3">
+                    <label for="email" class="visually-hidden">Admin email</label>
+                    <div class="input-icon">
+                        <i class="bi bi-envelope"></i>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="Admin Email"
+                               autocomplete="username" required autofocus>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="visually-hidden">Password</label>
+                    <div class="input-icon">
+                        <i class="bi bi-lock"></i>
+                        <input type="password" id="password" name="password" class="form-control"
+                               placeholder="Password" autocomplete="current-password" required>
+                        <button type="button" class="toggle-password" data-toggle-password="password"
+                                aria-label="Show password"><i class="bi bi-eye"></i></button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check m-0">
+                        <input class="form-check-input" type="checkbox" id="remember" name="remember-me">
+                        <label class="form-check-label small" for="remember">Remember me</label>
+                    </div>
+                    <span class="small text-muted-2"><i class="bi bi-shield-lock me-1"></i>Secure sign-in</span>
+                </div>
+                <button type="submit" class="btn btn-terracotta btn-lg w-100" data-loading-text="Signing in...">
+                    Login <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </form>
+
+            <div class="demo-box">
+                <span>Demo: <code th:text="${demoEmail}">admin@libratrack.com</code> /
+                    <code th:text="${demoPassword}">admin123</code></span>
+                <button type="button" class="btn btn-ghost btn-sm" data-fill-demo
+                        th:attr="data-email=${demoEmail},data-password=${demoPassword}">Use demo</button>
+            </div>
+        </div>
+    </section>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

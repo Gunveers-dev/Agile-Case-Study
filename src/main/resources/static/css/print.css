@@ -1,0 +1,60 @@
+/* ==========================================================================
+   LibraTrack — print styles (used by "Print report")
+   ========================================================================== */
+
+@page {
+    size: A4;
+    margin: 14mm;
+}
+
+body {
+    background: #FFFFFF !important;
+    font-size: 11pt;
+}
+
+.sidebar,
+.sidebar-backdrop,
+.topbar,
+.toast-stack,
+.no-print,
+.btn,
+.modal {
+    display: none !important;
+}
+
+.main {
+    margin-left: 0 !important;
+}
+
+.content {
+    padding: 0 !important;
+}
+
+.print-only {
+    display: block !important;
+}
+
+.lt-card,
+.table-wrap,
+.stat-card {
+    box-shadow: none !important;
+    border: 1px solid #CFC6B8 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.stat-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.report-grid {
+    grid-template-columns: 1fr 1fr !important;
+}
+
+.chart-box {
+    height: 220px !important;
+}
+
+a {
+    color: inherit !important;
+}

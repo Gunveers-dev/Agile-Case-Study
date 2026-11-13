@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error')}"></head>
+<body>
+<div class="error-page">
+    <div class="lt-card error-card">
+        <div class="error-code" th:text="${status ?: 'Oops'}">404</div>
+        <h1 class="h3" th:text="${status == 404} ? 'Page not found' : (${status == 403} ? 'Access denied' : (${error} ?: 'Something went wrong'))">Page not found</h1>
+        <p class="text-muted-2"
+           th:text="${message != null and !#strings.isEmpty(message) and message != 'No message available'} ? ${message} : (${status == 404} ? 'The page or record you are looking for does not exist.' : 'Please go back and try again.')">
+            The page you are looking for does not exist.</p>
+        <div class="d-flex gap-2 justify-content-center mt-4">
+            <a href="javascript:history.back()" class="btn btn-ghost"><i class="bi bi-arrow-left me-1"></i>Go back</a>
+            <a th:href="@{/dashboard}" class="btn btn-terracotta"><i class="bi bi-house me-1"></i>Dashboard</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reports')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar('Reports & Analytics', 'Circulation statistics for the library')}"></header>
+
+        <div class="content">
+            <div class="print-only mb-3">
+                <h2 class="m-0">LibraTrack — Library Report</h2>
+            </div>
+
+            <div class="report-meta">
+                <span><i class="bi bi-clock me-1"></i>Generated on
+                    <strong th:text="${#temporals.format(generatedAt, 'dd MMM yyyy, hh:mm a')}">08 Nov 2026</strong></span>
+                <button type="button" class="btn btn-terracotta no-print" data-print>
+                    <i class="bi bi-printer me-1"></i>Print report</button>
+            </div>
+
+            <section class="stat-grid">
+                <div class="stat-card tint-peach">
+                    <div class="stat-icon"><i class="bi bi-book"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(summary.totalBooks(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Total Books</div>
+                    <div class="stat-hint" th:text="${summary.totalTitles()} + ' titles'">titles</div>
+                </div>
+                <div class="stat-card tint-blue">
+                    <div class="stat-icon"><i class="bi bi-people"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(summary.totalMembers(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Total Members</div>
+                </div>
+                <div class="stat-card tint-green">
+                    <div class="stat-icon"><i class="bi bi-arrow-left-right"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(summary.totalTransactions(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Total Issues</div>
+                    <div class="stat-hint" th:text="${summary.activeLoans()} + ' currently out'">out</div>
+                </div>
+                <div class="stat-card tint-sand">
+                    <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(summary.returnedLoans(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Books Returned</div>
+                </div>
+                <div class="stat-card tint-rose">
+                    <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+                    <div class="stat-value" th:text="${summary.overdueBooks()}">0</div>
+                    <div class="stat-label">Overdue Books</div>
+                    <div class="stat-hint" th:text="'₹' + ${#numbers.formatInteger(summary.pendingFines(), 1, 'COMMA')} + ' accruing'">₹0</div>
+                </div>
+                <div class="stat-card tint-amber">
+                    <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
+                    <div class="stat-value" th:text="'₹' + ${#numbers.formatInteger(summary.totalFinesCollected(), 1, 'COMMA')}">₹0</div>
+                    <div class="stat-label">Fines Collected</div>
+                </div>
+            </section>
+
+            <div class="report-grid">
+                <section class="lt-card">
+                    <div class="lt-card-header"><h2>Monthly Book Issues</h2><span class="small text-muted-2">Last 12 months</span></div>
+                    <div class="chart-box">
+                        <canvas id="monthlyIssuesChart" aria-label="Books issued per month"></canvas>
+                    </div>
+                </section>
+                <section class="lt-card">
+                    <div class="lt-card-header"><h2>Fines Collected</h2><span class="small text-muted-2">By return month (₹)</span></div>
+                    <div class="chart-box">
+                        <canvas id="finesChart" aria-label="Fines collected per month"></canvas>
+                    </div>
+                </section>
+                <section class="lt-card">
+                    <div class="lt-card-header"><h2>Most Borrowed Books</h2><span class="small text-muted-2">All time</span></div>
+                    <div class="chart-box tall">
+                        <canvas id="mostBorrowedChart" aria-label="Most borrowed books"></canvas>
+                    </div>
+                </section>
+                <section class="lt-card">
+                    <div class="lt-card-header"><h2>Titles by Category</h2></div>
+                    <div class="chart-box tall">
+                        <canvas id="categoryChart" aria-label="Titles per category"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <div class="report-grid">
+                <section class="table-wrap">
+                    <div class="lt-card-header px-4 pt-4"><h2>Top 10 Borrowed</h2></div>
+                    <div th:if="${#lists.isEmpty(mostBorrowed)}" class="empty-state py-4"><p>No loans recorded yet.</p></div>
+                    <table class="lt-table" th:unless="${#lists.isEmpty(mostBorrowed)}">
+                        <thead><tr><th>#</th><th>Title</th><th>Category</th><th class="text-end">Issues</th></tr></thead>
+                        <tbody>
+                        <tr th:each="pb, it : ${mostBorrowed}">
+                            <td><span class="rank" th:text="${it.count}">1</span></td>
+                            <td><span class="cell-title" th:text="${pb.book().title}">Clean Code</span>
+                                <span class="cell-sub" th:text="${pb.book().author}">Author</span></td>
+                            <td><span class="chip" th:text="${pb.book().category}">Programming</span></td>
+                            <td class="text-end qty" th:text="${pb.issueCount()}">10</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="table-wrap">
+                    <div class="lt-card-header px-4 pt-4">
+                        <h2>Overdue Books</h2>
+                        <a th:href="@{/circulation(tab='return')}" class="link-more no-print">Open Return desk</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(overdueLoans)}" class="empty-state py-4">
+                        <div class="empty-icon"><i class="bi bi-emoji-smile"></i></div>
+                        <p>No overdue books. Everything is on time.</p>
+                    </div>
+                    <table class="lt-table" th:unless="${#lists.isEmpty(overdueLoans)}">
+                        <thead><tr><th>Member</th><th>Book</th><th>Due</th><th>Days</th><th class="text-end">Fine</th></tr></thead>
+                        <tbody>
+                        <tr th:each="view : ${overdueLoans}">
+                            <td><span class="cell-title" th:text="${view.loan().member.fullName}">Member</span>
+                                <span class="cell-sub" th:text="${view.loan().member.memberCode}">STU101</span></td>
+                            <td th:text="${view.loan().book.title}">Book</td>
+                            <td class="nowrap" th:text="${#temporals.format(view.loan().dueDate, 'dd MMM')}">01 Nov</td>
+                            <td class="overdue-text" th:text="${view.overdueDays()}">3</td>
+                            <td class="text-end qty" th:text="'₹' + ${#numbers.formatInteger(view.fineIfReturnedToday(), 1, 'COMMA')}">₹15</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{fragments/layout :: chartScripts}"></th:block>
+<script th:inline="javascript">
+    const monthly = { labels: /*[[${monthlyIssues.labels()}]]*/ [], values: /*[[${monthlyIssues.values()}]]*/ [] };
+    const fines = { labels: /*[[${monthlyFines.labels()}]]*/ [], values: /*[[${monthlyFines.values()}]]*/ [] };
+    const categories = { labels: /*[[${categoryChart.labels()}]]*/ [], values: /*[[${categoryChart.values()}]]*/ [] };
+    const borrowed = { labels: /*[[${mostBorrowedChart.labels()}]]*/ [], values: /*[[${mostBorrowedChart.values()}]]*/ [] };
+
+    LibraCharts.bar("monthlyIssuesChart", monthly.labels, monthly.values, { label: "Books issued" });
+    LibraCharts.line("finesChart", fines.labels, fines.values, { label: "Fines (₹)", prefix: "₹" });
+    LibraCharts.bar("mostBorrowedChart", borrowed.labels, borrowed.values,
+        { label: "Times issued", horizontal: true, color: LibraCharts.colors.navy });
+    LibraCharts.doughnut("categoryChart", categories.labels, categories.values);
+</script>
+</body>
+</html>

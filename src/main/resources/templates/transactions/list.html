@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Transactions')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar('Transactions', 'Complete history of issues and returns')}"></header>
+
+        <div class="content">
+            <!-- Status quick filters -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a th:href="@{/transactions(q=${q},from=${from},to=${to},sort=${sort})}" class="lt-tab"
+                   th:classappend="${#strings.isEmpty(status)} ? 'active'">All
+                    <span class="count" th:text="${summary.totalTransactions()}">0</span></a>
+                <a th:href="@{/transactions(q=${q},status='ISSUED',from=${from},to=${to},sort=${sort})}" class="lt-tab"
+                   th:classappend="${status == 'ISSUED'} ? 'active'">Issued
+                    <span class="count" th:text="${summary.activeLoans() - summary.overdueBooks()}">0</span></a>
+                <a th:href="@{/transactions(q=${q},status='OVERDUE',from=${from},to=${to},sort=${sort})}" class="lt-tab"
+                   th:classappend="${status == 'OVERDUE'} ? 'active'">Overdue
+                    <span class="count" th:text="${summary.overdueBooks()}">0</span></a>
+                <a th:href="@{/transactions(q=${q},status='RETURNED',from=${from},to=${to},sort=${sort})}" class="lt-tab"
+                   th:classappend="${status == 'RETURNED'} ? 'active'">Returned
+                    <span class="count" th:text="${summary.returnedLoans()}">0</span></a>
+            </div>
+
+            <form class="toolbar" th:action="@{/transactions}" method="get" role="search">
+                <input type="hidden" name="status" th:value="${status}">
+                <div class="search input-icon">
+                    <i class="bi bi-search"></i>
+                    <input type="search" name="q" class="form-control" th:value="${q}"
+                           placeholder="Search member, member ID, book title or book ID..." aria-label="Search transactions">
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small text-muted-2" for="from">Issued from</label>
+                    <input type="date" id="from" name="from" class="form-control" th:value="${from}">
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small text-muted-2" for="to">to</label>
+                    <input type="date" id="to" name="to" class="form-control" th:value="${to}">
+                </div>
+                <select name="sort" class="form-select" data-autosubmit aria-label="Sort order">
+                    <option value="newest" th:selected="${sort == 'newest'}">Newest first</option>
+                    <option value="oldest" th:selected="${sort == 'oldest'}">Oldest first</option>
+                </select>
+                <button type="submit" class="btn btn-ghost"><i class="bi bi-funnel me-1"></i>Apply</button>
+                <a th:if="${!#strings.isEmpty(q) or !#strings.isEmpty(status) or !#strings.isEmpty(from) or !#strings.isEmpty(to)}"
+                   th:href="@{/transactions}" class="btn btn-ghost">Clear</a>
+            </form>
+
+            <div class="table-wrap">
+                <div th:if="${transactions.totalElements == 0}" class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-receipt"></i></div>
+                    <h3>No transactions found</h3>
+                    <p>Try a different search, status or date range.</p>
+                    <a th:href="@{/transactions}" class="btn btn-ghost">Show all transactions</a>
+                </div>
+
+                <div class="table-scroll" th:if="${transactions.totalElements > 0}">
+                    <table class="lt-table">
+                        <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Member Name</th>
+                            <th>Book Title</th>
+                            <th>Issue Date</th>
+                            <th>Due Date</th>
+                            <th>Return Date</th>
+                            <th>Fine</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="tx : ${transactions.content}" th:with="loan=${tx.loan()}">
+                            <td class="code" th:text="${loan.transactionCode}">TXN-0001</td>
+                            <td><a class="cell-title text-reset" th:href="@{/members/{id}(id=${loan.member.id})}" th:text="${loan.member.fullName}">Ananya</a>
+                                <span class="cell-sub" th:text="${loan.member.memberCode}">STU101</span></td>
+                            <td><a class="cell-title text-reset" th:href="@{/books/{id}(id=${loan.book.id})}" th:text="${loan.book.title}">Clean Code</a>
+                                <span class="cell-sub" th:text="${loan.book.bookCode}">BK001</span></td>
+                            <td class="nowrap" th:text="${#temporals.format(loan.issueDate, 'dd MMM yyyy')}">01 Nov 2026</td>
+                            <td class="nowrap" th:text="${#temporals.format(loan.dueDate, 'dd MMM yyyy')}">15 Nov 2026</td>
+                            <td class="nowrap" th:text="${loan.returnDate != null} ? ${#temporals.format(loan.returnDate, 'dd MMM yyyy')} : '—'">—</td>
+                            <td class="qty nowrap">
+                                <span th:text="'₹' + ${#numbers.formatInteger(tx.fine(), 1, 'COMMA')}"
+                                      th:classappend="${tx.accruing()} ? 'overdue-text'">₹0</span>
+                                <span class="cell-sub" th:if="${tx.accruing()}">accruing</span>
+                            </td>
+                            <td><span class="lt-badge"
+                                      th:classappend="${tx.status().name() == 'RETURNED'} ? 'badge-returned' : (${tx.status().name() == 'OVERDUE'} ? 'badge-overdue' : 'badge-loan-issued')"
+                                      th:text="${tx.status().name()}">ISSUED</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer" th:if="${transactions.totalElements > 0}">
+                    <span th:text="'Showing ' + ${transactions.number * transactions.size + 1} + '–' + ${transactions.number * transactions.size + transactions.numberOfElements} + ' of ' + ${transactions.totalElements} + ' transactions'">Showing</span>
+                    <ul class="lt-pagination" th:if="${transactions.totalPages > 1}">
+                        <li th:classappend="${transactions.first} ? 'disabled'">
+                            <span th:if="${transactions.first}"><i class="bi bi-chevron-left"></i></span>
+                            <a th:unless="${transactions.first}" aria-label="Previous page"
+                               th:href="@{/transactions(q=${q},status=${status},from=${from},to=${to},sort=${sort},page=${transactions.number - 1})}"><i class="bi bi-chevron-left"></i></a>
+                        </li>
+                        <li th:each="i : ${#numbers.sequence(0, transactions.totalPages - 1)}"
+                            th:if="${i == 0 or i == transactions.totalPages - 1 or (i >= transactions.number - 2 and i <= transactions.number + 2)}"
+                            th:classappend="${i == transactions.number} ? 'current'">
+                            <span th:if="${i == transactions.number}" th:text="${i + 1}">1</span>
+                            <a th:unless="${i == transactions.number}" th:text="${i + 1}"
+                               th:href="@{/transactions(q=${q},status=${status},from=${from},to=${to},sort=${sort},page=${i})}">2</a>
+                        </li>
+                        <li th:classappend="${transactions.last} ? 'disabled'">
+                            <span th:if="${transactions.last}"><i class="bi bi-chevron-right"></i></span>
+                            <a th:unless="${transactions.last}" aria-label="Next page"
+                               th:href="@{/transactions(q=${q},status=${status},from=${from},to=${to},sort=${sort},page=${transactions.number + 1})}"><i class="bi bi-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

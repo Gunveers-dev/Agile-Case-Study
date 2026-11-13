@@ -1,0 +1,77 @@
+/* ==========================================================================
+   LibraTrack - offline icon fallback
+   Used only when the Bootstrap Icons CDN cannot be reached (the <html> element gets
+   the "icons-offline" class). Glyphs come from the bundled Font Awesome Free font
+   (Icons: CC BY 4.0, Font: SIL OFL 1.1 - see /vendor/fontawesome/LICENSE.txt).
+   ========================================================================== */
+
+@font-face {
+    font-family: "LT Icons Offline";
+    src: url("../vendor/fontawesome/fa-solid-900.woff2") format("woff2");
+    font-weight: 900;
+    font-style: normal;
+    font-display: block;
+}
+
+.icons-offline .bi::before {
+    font-family: "LT Icons Offline" !important;
+    font-weight: 900;
+    font-style: normal;
+    display: inline-block;
+    line-height: 1;
+    vertical-align: -0.125em;
+    -webkit-font-smoothing: antialiased;
+}
+
+.icons-offline .bi-activity::before { content: "\f83e"; }
+.icons-offline .bi-arrow-left::before { content: "\f060"; }
+.icons-offline .bi-arrow-left-right::before { content: "\f362"; }
+.icons-offline .bi-arrow-return-left::before { content: "\f0e2"; }
+.icons-offline .bi-arrow-right::before { content: "\f061"; }
+.icons-offline .bi-bell-fill::before { content: "\f0f3"; }
+.icons-offline .bi-book::before { content: "\f02d"; }
+.icons-offline .bi-book-half::before { content: "\f518"; }
+.icons-offline .bi-bookshelf::before { content: "\e0bb"; }
+.icons-offline .bi-box-arrow-left::before { content: "\f2f5"; }
+.icons-offline .bi-box-arrow-up-right::before { content: "\f08e"; }
+.icons-offline .bi-calendar-event::before { content: "\f783"; }
+.icons-offline .bi-calendar3::before { content: "\f133"; }
+.icons-offline .bi-cash-coin::before { content: "\f51e"; }
+.icons-offline .bi-check-circle::before { content: "\f058"; }
+.icons-offline .bi-check-lg::before { content: "\f00c"; }
+.icons-offline .bi-check2::before { content: "\f00c"; }
+.icons-offline .bi-check2-circle::before { content: "\f058"; }
+.icons-offline .bi-chevron-down::before { content: "\f078"; }
+.icons-offline .bi-chevron-left::before { content: "\f053"; }
+.icons-offline .bi-chevron-right::before { content: "\f054"; }
+.icons-offline .bi-clock::before { content: "\f017"; }
+.icons-offline .bi-clock-history::before { content: "\f1da"; }
+.icons-offline .bi-currency-rupee::before { content: "\e1bc"; }
+.icons-offline .bi-emoji-smile::before { content: "\f118"; }
+.icons-offline .bi-envelope::before { content: "\f0e0"; }
+.icons-offline .bi-exclamation-circle::before { content: "\f06a"; }
+.icons-offline .bi-exclamation-lg::before { content: "\!"; }
+.icons-offline .bi-exclamation-triangle::before { content: "\f071"; }
+.icons-offline .bi-eye::before { content: "\f06e"; }
+.icons-offline .bi-eye-slash::before { content: "\f070"; }
+.icons-offline .bi-funnel::before { content: "\f0b0"; }
+.icons-offline .bi-gear::before { content: "\f013"; }
+.icons-offline .bi-graph-up::before { content: "\f201"; }
+.icons-offline .bi-house::before { content: "\f015"; }
+.icons-offline .bi-inboxes::before { content: "\f01c"; }
+.icons-offline .bi-journal-bookmark::before { content: "\f02e"; }
+.icons-offline .bi-journal-x::before { content: "\f057"; }
+.icons-offline .bi-list::before { content: "\f0c9"; }
+.icons-offline .bi-lock::before { content: "\f023"; }
+.icons-offline .bi-pencil::before { content: "\f304"; }
+.icons-offline .bi-people::before { content: "\f500"; }
+.icons-offline .bi-person::before { content: "\f007"; }
+.icons-offline .bi-person-check::before { content: "\f4fc"; }
+.icons-offline .bi-person-plus::before { content: "\f234"; }
+.icons-offline .bi-plus-lg::before { content: "\+"; }
+.icons-offline .bi-printer::before { content: "\f02f"; }
+.icons-offline .bi-receipt::before { content: "\f543"; }
+.icons-offline .bi-search::before { content: "\f002"; }
+.icons-offline .bi-shield-lock::before { content: "\f3ed"; }
+.icons-offline .bi-star::before { content: "\f005"; }
+.icons-offline .bi-trash3::before { content: "\f2ed"; }

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar(${pageTitle}, ${pageSubtitle})}"></header>
+
+        <div class="content">
+            <nav class="crumbs" aria-label="Breadcrumb">
+                <a th:href="@{/members}">Members</a><i class="bi bi-chevron-right"></i>
+                <a th:if="${editing}" th:href="@{/members/{id}(id=${memberId})}" th:text="${member.fullName}">Member</a>
+                <i th:if="${editing}" class="bi bi-chevron-right"></i>
+                <span th:text="${editing} ? 'Edit' : 'Register'">Register</span>
+            </nav>
+
+            <div class="row g-4">
+                <div class="col-xl-8">
+                    <form class="lt-card" method="post" novalidate
+                          th:action="${editing} ? @{/members/{id}(id=${memberId})} : @{/members}" th:object="${member}">
+
+                        <div th:if="${#fields.hasGlobalErrors()}" class="form-error-box mb-4">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <div><p class="m-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p></div>
+                        </div>
+
+                        <h3 class="form-section-title">Member details</h3>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label" for="memberCode">Member ID<span class="req">*</span></label>
+                                <input type="text" id="memberCode" class="form-control" th:field="*{memberCode}"
+                                       th:errorclass="is-invalid" placeholder="e.g. STU113" maxlength="20" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('memberCode')}" th:errors="*{memberCode}"></div>
+                                <div class="form-text">Must be unique.</div>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label" for="fullName">Full name<span class="req">*</span></label>
+                                <input type="text" id="fullName" class="form-control" th:field="*{fullName}"
+                                       th:errorclass="is-invalid" placeholder="e.g. Ananya Verma" maxlength="120" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="email">Email<span class="req">*</span></label>
+                                <input type="email" id="email" class="form-control" th:field="*{email}"
+                                       th:errorclass="is-invalid" placeholder="name@college.edu" maxlength="120" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="phone">Phone number<span class="req">*</span></label>
+                                <input type="tel" id="phone" class="form-control" th:field="*{phone}"
+                                       th:errorclass="is-invalid" placeholder="10-digit mobile number" maxlength="16" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="department">Department<span class="req">*</span></label>
+                                <select id="department" class="form-select" th:field="*{department}" th:errorclass="is-invalid" required>
+                                    <option value="">Select a department</option>
+                                    <option th:each="d : ${departments}" th:value="${d}" th:text="${d}">CSE</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('department')}" th:errors="*{department}"></div>
+                            </div>
+                            <div class="col-md-6" th:if="${editing and member.registrationDate != null}">
+                                <label class="form-label">Registration date</label>
+                                <input type="text" class="form-control" disabled
+                                       th:value="${#temporals.format(member.registrationDate, 'dd MMM yyyy')}">
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end mt-4 pt-2">
+                            <a th:href="${editing} ? @{/members/{id}(id=${memberId})} : @{/members}" class="btn btn-ghost">Cancel</a>
+                            <button type="submit" class="btn btn-terracotta" data-loading-text="Saving...">
+                                <i class="bi bi-check2 me-1"></i><span th:text="${editing} ? 'Save changes' : 'Register Member'">Register Member</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-xl-4">
+                    <div class="lt-card">
+                        <h3 class="lt-card-title mb-3">Membership rules</h3>
+                        <ul class="info-list">
+                            <li><span class="label">Member ID</span><span class="value">Unique</span></li>
+                            <li><span class="label">Email</span><span class="value">Valid &amp; unique</span></li>
+                            <li><span class="label">Borrowing limit</span><span class="value">3 books at a time</span></li>
+                            <li><span class="label">Loan period</span><span class="value">14 days</span></li>
+                            <li><span class="label">Overdue fine</span><span class="value">₹5 per day</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar('Dashboard', 'Overview of your library at a glance')}"></header>
+
+        <div class="content">
+
+            <!-- Statistic cards (live from the database) -->
+            <section class="stat-grid">
+                <a class="stat-card tint-peach" th:href="@{/books}">
+                    <div class="stat-icon"><i class="bi bi-book"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(stats.totalBooks(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Total Books</div>
+                    <div class="stat-hint" th:text="${stats.totalTitles()} + ' titles'">0 titles</div>
+                </a>
+                <a class="stat-card tint-blue" th:href="@{/members}">
+                    <div class="stat-icon"><i class="bi bi-people"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(stats.totalMembers(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Total Members</div>
+                    <div class="stat-hint">Registered borrowers</div>
+                </a>
+                <a class="stat-card tint-green" th:href="@{/transactions(status='ISSUED')}">
+                    <div class="stat-icon"><i class="bi bi-arrow-left-right"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(stats.booksIssued(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Books Issued</div>
+                    <div class="stat-hint">Currently on loan</div>
+                </a>
+                <a class="stat-card tint-sand" th:href="@{/books(status='AVAILABLE')}">
+                    <div class="stat-icon"><i class="bi bi-bookshelf"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(stats.availableBooks(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Available Books</div>
+                    <div class="stat-hint">Copies on the shelf</div>
+                </a>
+                <a class="stat-card tint-rose" th:href="@{/transactions(status='OVERDUE')}">
+                    <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+                    <div class="stat-value" th:text="${#numbers.formatInteger(stats.overdueBooks(), 1, 'COMMA')}">0</div>
+                    <div class="stat-label">Overdue Books</div>
+                    <div class="stat-hint">Past the due date</div>
+                </a>
+                <a class="stat-card tint-amber" th:href="@{/circulation(tab='return')}">
+                    <div class="stat-icon"><i class="bi bi-currency-rupee"></i></div>
+                    <div class="stat-value" th:text="'₹' + ${#numbers.formatInteger(stats.pendingFines(), 1, 'COMMA')}">₹0</div>
+                    <div class="stat-label">Pending Fines</div>
+                    <div class="stat-hint">Accruing on overdue books</div>
+                </a>
+            </section>
+
+            <div class="dash-grid">
+                <!-- Issue trend -->
+                <section class="lt-card">
+                    <div class="lt-card-header">
+                        <h2>Book Issue Trend</h2>
+                        <span class="small text-muted-2">Last 6 months</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="issueTrendChart" aria-label="Books issued per month"></canvas>
+                    </div>
+                </section>
+
+                <!-- Recent activities -->
+                <section class="lt-card">
+                    <div class="lt-card-header">
+                        <h2>Recent Activities</h2>
+                        <a th:href="@{/transactions}" class="link-more">View All</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(activities)}" class="empty-state py-4">
+                        <div class="empty-icon"><i class="bi bi-activity"></i></div>
+                        <p>No activity yet. Issue a book or register a member to see it here.</p>
+                    </div>
+                    <ul class="activity-list" th:unless="${#lists.isEmpty(activities)}">
+                        <li class="activity-item" th:each="item : ${activities}">
+                            <div class="activity-icon"
+                                 th:classappend="${item.type() == 'ISSUED'} ? 'issued' : (${item.type() == 'RETURNED'} ? 'returned' : 'member')">
+                                <i class="bi"
+                                   th:classappend="${item.type() == 'ISSUED'} ? 'bi-book' : (${item.type() == 'RETURNED'} ? 'bi-arrow-return-left' : 'bi-person-plus')"></i>
+                            </div>
+                            <div class="activity-body">
+                                <a th:href="@{${item.link()}}">
+                                    <strong th:text="${item.title()}">Book Issued</strong>
+                                    <span th:text="${item.detail()}">Detail</span>
+                                </a>
+                            </div>
+                            <div class="activity-time"
+                                 th:text="${item.date() == #temporals.createToday()} ? 'Today' : (${item.date() == #temporals.createToday().minusDays(1)} ? 'Yesterday' : ${#temporals.format(item.date(), 'dd MMM')})">
+                                Today
+                            </div>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+
+            <div class="dash-grid">
+                <!-- Popular books -->
+                <section class="lt-card">
+                    <div class="lt-card-header">
+                        <h2>Popular Books</h2>
+                        <a th:href="@{/reports}" class="link-more">Full report</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(popularBooks)}" class="empty-state py-4">
+                        <div class="empty-icon"><i class="bi bi-star"></i></div>
+                        <p>Popular titles appear here once books are issued.</p>
+                    </div>
+                    <ul class="popular-list" th:unless="${#lists.isEmpty(popularBooks)}"
+                        th:with="top=${popularBooks[0].issueCount()}">
+                        <li class="popular-item" th:each="pb, it : ${popularBooks}">
+                            <span class="rank" th:text="${it.count}">1</span>
+                            <div class="info">
+                                <a th:href="@{/books/{id}(id=${pb.book().id})}" th:text="${pb.book().title}">Clean Code</a>
+                                <small th:text="${pb.book().author} + ' · ' + ${pb.book().category}">Author</small>
+                                <div class="bar-track"><div class="bar-fill" th:attr="data-width=${pb.issueCount() * 100 / top}"></div></div>
+                            </div>
+                            <span class="issues-count" th:text="${pb.issueCount()} + ' issues'">10 issues</span>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- Quick actions -->
+                <section class="lt-card">
+                    <div class="lt-card-header">
+                        <h2>Quick Actions</h2>
+                    </div>
+                    <div class="quick-actions">
+                        <a class="quick-action" th:href="@{/books/new}">
+                            <i class="bi bi-plus-lg"></i><span>Add Book</span><small>New title in catalogue</small>
+                        </a>
+                        <a class="quick-action" th:href="@{/members/new}">
+                            <i class="bi bi-person-plus"></i><span>Register Member</span><small>Add a student or staff</small>
+                        </a>
+                        <a class="quick-action" th:href="@{/circulation(tab='issue')}">
+                            <i class="bi bi-box-arrow-up-right"></i><span>Issue Book</span><small>Lend a copy</small>
+                        </a>
+                        <a class="quick-action" th:href="@{/circulation(tab='return')}">
+                            <i class="bi bi-arrow-return-left"></i><span>Return Book</span><small>Check in &amp; collect fine</small>
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{fragments/layout :: chartScripts}"></th:block>
+<script th:inline="javascript">
+    const trendLabels = /*[[${issueTrend.labels()}]]*/ [];
+    const trendValues = /*[[${issueTrend.values()}]]*/ [];
+    LibraCharts.line("issueTrendChart", trendLabels, trendValues, { label: "Books issued" });
+</script>
+</body>
+</html>

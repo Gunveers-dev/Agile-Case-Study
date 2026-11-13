@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Circulation')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar(${pageTitle}, ${pageSubtitle})}"></header>
+
+        <div class="content">
+            <div class="circ-header">
+                <nav class="lt-tabs" aria-label="Circulation tabs">
+                    <a th:href="@{/circulation(tab='issue')}" class="lt-tab" th:classappend="${tab == 'issue'} ? 'active'">
+                        <i class="bi bi-book"></i>Issue Book</a>
+                    <a th:href="@{/circulation(tab='return')}" class="lt-tab" th:classappend="${tab == 'return'} ? 'active'">
+                        <i class="bi bi-arrow-return-left"></i>Return Book
+                        <span class="count" th:if="${tab == 'issue'}" th:text="${#lists.size(activeLoans)}">14</span></a>
+                </nav>
+                <div class="rules-strip m-0">
+                    <span class="rule-pill"><i class="bi bi-person-check"></i><span th:text="'Max ' + ${maxLoans} + ' books per member'">Max 3</span></span>
+                    <span class="rule-pill"><i class="bi bi-calendar-event"></i><span th:text="${loanDays} + '-day loan period'">14 days</span></span>
+                    <span class="rule-pill"><i class="bi bi-currency-rupee"></i><span th:text="'₹' + ${finePerDay} + ' fine per late day'">₹5</span></span>
+                </div>
+            </div>
+
+            <!-- ======================= ISSUE TAB ======================= -->
+            <section th:if="${tab == 'issue'}" class="lt-card issue-layout">
+                <div class="issue-art">
+                    <img th:src="@{/images/reading-nook.svg}" alt="">
+                </div>
+
+                <form class="issue-form" th:action="@{/circulation/issue}" method="post" th:object="${issueRequest}" novalidate>
+                    <div th:if="${#fields.hasGlobalErrors()}" class="form-error-box mb-3">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <div><p class="m-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="memberId">Select Member<span class="req">*</span></label>
+                        <input type="search" class="form-control form-control-sm select-filter" data-filter-select="memberId"
+                               placeholder="Type to find a member by name or ID..." aria-label="Find member">
+                        <div class="input-icon">
+                            <i class="bi bi-person"></i>
+                            <select id="memberId" class="form-select" th:field="*{memberId}" th:errorclass="is-invalid" required>
+                                <option value="">Choose a member</option>
+                                <option th:each="m : ${members}" th:value="${m.id}"
+                                        th:attr="data-loans=${memberLoans[m.id] ?: 0}"
+                                        th:text="${m.memberCode} + ' – ' + ${m.fullName} + ' (' + ${m.department} + ')'">STU102 – Ananya Verma (CSE)</option>
+                            </select>
+                        </div>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('memberId')}" th:errors="*{memberId}"></div>
+                        <div id="memberInfo" class="member-info" th:attr="data-max=${maxLoans}"></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="bookId">Select Book<span class="req">*</span></label>
+                        <input type="search" class="form-control form-control-sm select-filter" data-filter-select="bookId"
+                               placeholder="Type to find a book by title or ID..." aria-label="Find book">
+                        <div class="input-icon">
+                            <i class="bi bi-book"></i>
+                            <select id="bookId" class="form-select" th:field="*{bookId}" th:errorclass="is-invalid" required>
+                                <option value="">Choose an available book</option>
+                                <option th:each="b : ${books}" th:value="${b.id}"
+                                        th:text="${b.bookCode} + ' – ' + ${b.title} + ' (' + ${b.availableQuantity} + ' available)'">BK003 – DBMS Concepts</option>
+                            </select>
+                        </div>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('bookId')}" th:errors="*{bookId}"></div>
+                        <div class="form-text" th:if="${#lists.isEmpty(books)}">No books are available right now — every copy is on loan.</div>
+                        <div class="form-text" th:unless="${#lists.isEmpty(books)}">Only books with a copy on the shelf are listed.</div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <label class="form-label" for="issueDate">Issue Date<span class="req">*</span></label>
+                            <div class="input-icon">
+                                <i class="bi bi-calendar3"></i>
+                                <input type="date" id="issueDate" class="form-control" th:field="*{issueDate}"
+                                       th:errorclass="is-invalid" th:max="${today}" required>
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('issueDate')}" th:errors="*{issueDate}"></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="dueDate">Due Date<span class="req">*</span></label>
+                            <div class="input-icon">
+                                <i class="bi bi-calendar3"></i>
+                                <input type="date" id="dueDate" class="form-control" th:field="*{dueDate}"
+                                       th:errorclass="is-invalid" th:attr="data-loan-days=${loanDays}" required>
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('dueDate')}" th:errors="*{dueDate}"></div>
+                            <div class="form-text" th:text="'Defaults to ' + ${loanDays} + ' days after the issue date.'">Defaults to 14 days.</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-terracotta btn-lg w-100" data-loading-text="Issuing...">
+                        Issue Book <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </form>
+            </section>
+
+            <!-- ======================= RETURN TAB ======================= -->
+            <section th:if="${tab == 'return'}">
+                <form class="toolbar" th:action="@{/circulation}" method="get" role="search">
+                    <input type="hidden" name="tab" value="return">
+                    <div class="search input-icon">
+                        <i class="bi bi-search"></i>
+                        <input type="search" name="q" class="form-control" th:value="${q}"
+                               placeholder="Search by member ID, member name or book title..." aria-label="Search issued books">
+                    </div>
+                    <button type="submit" class="btn btn-ghost"><i class="bi bi-search me-1"></i>Search</button>
+                    <a th:if="${!#strings.isEmpty(q)}" th:href="@{/circulation(tab='return')}" class="btn btn-ghost">Clear</a>
+                    <span class="spacer"></span>
+                    <span class="small text-muted-2" th:text="${#lists.size(activeLoans)} + ' book(s) currently issued'">14 books</span>
+                </form>
+
+                <div class="table-wrap">
+                    <div th:if="${#lists.isEmpty(activeLoans)}" class="empty-state">
+                        <div class="empty-icon"><i class="bi bi-inboxes"></i></div>
+                        <h3 th:text="${#strings.isEmpty(q)} ? 'No books are out' : 'No matching loans'">No books are out</h3>
+                        <p th:if="${#strings.isEmpty(q)}">Every book is on the shelf. Issued books will appear here.</p>
+                        <p th:unless="${#strings.isEmpty(q)}">No issued book matches that member ID, name or title.</p>
+                        <a th:href="@{/circulation(tab='issue')}" class="btn btn-terracotta">Issue a book</a>
+                    </div>
+
+                    <div class="table-scroll" th:unless="${#lists.isEmpty(activeLoans)}">
+                        <table class="lt-table">
+                            <thead>
+                            <tr>
+                                <th>Txn</th>
+                                <th>Member</th>
+                                <th>Book</th>
+                                <th>Issued</th>
+                                <th>Due date</th>
+                                <th>Status</th>
+                                <th>Fine if returned today</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="view : ${activeLoans}" th:with="loan=${view.loan()}">
+                                <td class="code" th:text="${loan.transactionCode}">TXN-0001</td>
+                                <td><a class="cell-title text-reset" th:href="@{/members/{id}(id=${loan.member.id})}" th:text="${loan.member.fullName}">Ananya</a>
+                                    <span class="cell-sub" th:text="${loan.member.memberCode}">STU101</span></td>
+                                <td><a class="cell-title text-reset" th:href="@{/books/{id}(id=${loan.book.id})}" th:text="${loan.book.title}">DBMS</a>
+                                    <span class="cell-sub" th:text="${loan.book.bookCode}">BK013</span></td>
+                                <td class="nowrap" th:text="${#temporals.format(loan.issueDate, 'dd MMM yyyy')}">01 Nov</td>
+                                <td class="nowrap" th:text="${#temporals.format(loan.dueDate, 'dd MMM yyyy')}">15 Nov</td>
+                                <td>
+                                    <span th:if="${view.overdue}" class="lt-badge badge-overdue"
+                                          th:text="${view.overdueDays()} + (${view.overdueDays() == 1} ? ' day overdue' : ' days overdue')">3 days overdue</span>
+                                    <span th:unless="${view.overdue}" class="lt-badge badge-loan-issued"
+                                          th:text="${loan.dueDate == today} ? 'Due today' : 'On time'">On time</span>
+                                </td>
+                                <td class="qty" th:classappend="${view.overdue} ? 'overdue-text'"
+                                    th:text="'₹' + ${#numbers.formatInteger(view.fineIfReturnedToday(), 1, 'COMMA')}">₹0</td>
+                                <td class="actions">
+                                    <form th:action="@{/circulation/return/{id}(id=${loan.id})}" method="post" class="d-inline"
+                                          th:data-confirm="'Return ' + ${loan.book.title} + ' from ' + ${loan.member.fullName} + '? Fine to collect: ₹' + ${#numbers.formatInteger(view.fineIfReturnedToday(), 1, 'COMMA')} + '.'"
+                                          data-confirm-title="Return book?" data-confirm-button="Confirm return" data-confirm-tone="positive">
+                                        <input type="hidden" name="q" th:value="${q}">
+                                        <button type="submit" class="btn btn-terracotta btn-sm"><i class="bi bi-arrow-return-left me-1"></i>Return Book</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- Receipt shown right after a successful return -->
+<div th:if="${returnResult != null}" class="modal fade" id="returnReceipt" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content lt-modal">
+            <div class="modal-body text-center">
+                <div class="confirm-icon ok"><i class="bi bi-check2-circle"></i></div>
+                <h3 class="confirm-title">Book returned</h3>
+                <p class="confirm-message" th:text="${returnResult.bookTitle()} + ' was returned by ' + ${returnResult.memberName()} + '.'">Returned</p>
+                <ul class="info-list receipt">
+                    <li><span class="label">Transaction</span><span class="value" th:text="${returnResult.transactionCode()}">TXN-0001</span></li>
+                    <li><span class="label">Issued on</span><span class="value" th:text="${#temporals.format(returnResult.issueDate(), 'dd MMM yyyy')}">01 Nov</span></li>
+                    <li><span class="label">Due date</span><span class="value" th:text="${#temporals.format(returnResult.dueDate(), 'dd MMM yyyy')}">15 Nov</span></li>
+                    <li><span class="label">Returned on</span><span class="value" th:text="${#temporals.format(returnResult.returnDate(), 'dd MMM yyyy')}">16 Nov</span></li>
+                    <li><span class="label">Days overdue</span><span class="value" th:text="${returnResult.overdueDays()}">0</span></li>
+                </ul>
+                <div class="receipt-total">
+                    <span th:text="${returnResult.hasFine()} ? 'Fine to collect' : 'No fine'">Fine</span>
+                    <strong th:text="'₹' + ${#numbers.formatInteger(returnResult.fineAmount(), 1, 'COMMA')}">₹0</strong>
+                </div>
+                <p class="small text-muted-2 mt-3 mb-0" th:if="${returnResult.hasFine()}"
+                   th:text="${returnResult.overdueDays()} + ' days × ₹5 per day'">5 days × ₹5</p>
+                <button type="button" class="btn btn-navy w-100 mt-3" data-bs-dismiss="modal">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

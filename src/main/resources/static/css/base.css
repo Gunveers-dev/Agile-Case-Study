@@ -1,0 +1,117 @@
+/* ==========================================================================
+   LibraTrack — base: design tokens, typography, resets
+   ========================================================================== */
+
+:root {
+    /* Palette */
+    --lt-ivory: #F5F0E8;          /* primary background */
+    --lt-cream: #EAE1D4;          /* secondary background */
+    --lt-paper: #FBF8F3;          /* card surface */
+    --lt-paper-strong: #FFFDF9;
+    --lt-navy: #19313B;           /* sidebar */
+    --lt-navy-2: #233F49;         /* secondary navy */
+    --lt-navy-3: #2E4E59;
+    --lt-terracotta: #C65D32;     /* primary accent */
+    --lt-terracotta-hover: #A94826;
+    --lt-terracotta-soft: #F6E3D8;
+    --lt-text: #18242A;           /* primary text */
+    --lt-text-2: #77736D;         /* secondary text */
+    --lt-text-3: #A39E96;
+    --lt-border: #E4DACB;
+    --lt-border-soft: #EEE6DA;
+
+    /* Status */
+    --lt-success: #DCEFE1;
+    --lt-success-ink: #2F6B45;
+    --lt-warning: #FCE8C5;
+    --lt-warning-ink: #8A5A12;
+    --lt-danger: #F9DDDA;
+    --lt-danger-ink: #A33A2B;
+    --lt-info: #DDE8F0;
+    --lt-info-ink: #2B5876;
+    --lt-neutral: #ECE7DF;
+    --lt-neutral-ink: #5E5A54;
+
+    /* Stat card tints */
+    --lt-tint-peach: #FBE8DA;
+    --lt-tint-blue: #DCE8F1;
+    --lt-tint-green: #DDEFE2;
+    --lt-tint-sand: #F3EAD7;
+    --lt-tint-rose: #F9E0DC;
+    --lt-tint-amber: #FCEACB;
+
+    /* Type */
+    --lt-font-heading: "Playfair Display", Georgia, "Times New Roman", serif;
+    --lt-font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    /* Shape & depth */
+    --lt-radius-sm: 8px;
+    --lt-radius: 12px;
+    --lt-radius-lg: 18px;
+    --lt-shadow-sm: 0 1px 2px rgba(24, 36, 42, 0.04);
+    --lt-shadow: 0 1px 2px rgba(24, 36, 42, 0.04), 0 6px 18px rgba(24, 36, 42, 0.05);
+    --lt-shadow-lg: 0 18px 50px rgba(24, 36, 42, 0.14);
+    --lt-transition: 180ms ease;
+
+    --lt-sidebar-width: 236px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    background: var(--lt-ivory);
+    color: var(--lt-text);
+    font-family: var(--lt-font-body);
+    font-size: 0.925rem;
+    line-height: 1.55;
+}
+
+h1, h2, h3, h4, .font-heading {
+    font-family: var(--lt-font-heading);
+    color: var(--lt-text);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+a {
+    color: var(--lt-terracotta);
+    text-decoration: none;
+    transition: color var(--lt-transition);
+}
+
+a:hover {
+    color: var(--lt-terracotta-hover);
+}
+
+::selection {
+    background: var(--lt-terracotta-soft);
+}
+
+:focus-visible {
+    outline: 2px solid var(--lt-terracotta);
+    outline-offset: 2px;
+}
+
+/* ---------- utilities ---------- */
+.text-muted-2 { color: var(--lt-text-2) !important; }
+.text-terracotta { color: var(--lt-terracotta) !important; }
+.text-navy { color: var(--lt-navy) !important; }
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.small-caps {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--lt-text-2);
+    font-weight: 600;
+}
+.mono { font-variant-numeric: tabular-nums; }
+.nowrap { white-space: nowrap; }

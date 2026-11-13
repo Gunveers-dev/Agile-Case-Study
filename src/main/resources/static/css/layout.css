@@ -1,0 +1,188 @@
+/* ==========================================================================
+   LibraTrack — application shell: sidebar, top bar, content area
+   ========================================================================== */
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ---------------- Sidebar ---------------- */
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--lt-sidebar-width);
+    background: var(--lt-navy);
+    color: #E9E4DB;
+    display: flex;
+    flex-direction: column;
+    padding: 26px 16px 22px;
+    z-index: 1040;
+    transition: transform 240ms ease;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 30px;
+    color: #FFFFFF;
+    font-family: var(--lt-font-heading);
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.sidebar-brand:hover { color: #FFFFFF; }
+
+.sidebar-brand i {
+    font-size: 1.5rem;
+    color: #F3E6D3;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 10px;
+    color: #D9DFE0;
+    font-weight: 500;
+    font-size: 0.93rem;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    transition: background var(--lt-transition), color var(--lt-transition), transform var(--lt-transition);
+}
+
+.nav-item i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+.nav-item:hover {
+    background: var(--lt-navy-2);
+    color: #FFFFFF;
+}
+
+.nav-item.active {
+    background: var(--lt-terracotta);
+    color: #FFFFFF;
+    box-shadow: 0 6px 16px rgba(198, 93, 50, 0.35);
+}
+
+.nav-button { cursor: pointer; }
+
+.sidebar-bottom {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
+/* ---------------- Main column ---------------- */
+.main {
+    flex: 1;
+    min-width: 0;
+    margin-left: var(--lt-sidebar-width);
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 26px 36px 22px;
+    border-bottom: 1px solid var(--lt-border-soft);
+    background: var(--lt-ivory);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.topbar-title { min-width: 0; }
+
+.topbar-title h1 {
+    font-size: 1.85rem;
+    margin: 0;
+    line-height: 1.15;
+}
+
+.topbar-title p {
+    margin: 4px 0 0;
+    color: var(--lt-text-2);
+    font-size: 0.9rem;
+}
+
+.topbar-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.topbar .sidebar-toggle { display: none; }
+
+.content {
+    padding: 28px 36px 48px;
+    flex: 1;
+}
+
+.crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.84rem;
+    color: var(--lt-text-2);
+    margin-bottom: 18px;
+}
+
+.crumbs a { color: var(--lt-text-2); }
+.crumbs a:hover { color: var(--lt-terracotta); }
+.crumbs i { font-size: 0.7rem; }
+.crumbs span:last-child { color: var(--lt-text); font-weight: 500; }
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: var(--lt-shadow-lg);
+    }
+
+    body.sidebar-open .sidebar { transform: translateX(0); }
+
+    body.sidebar-open .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(24, 36, 42, 0.45);
+        z-index: 1030;
+    }
+
+    .main { margin-left: 0; }
+    .topbar .sidebar-toggle { display: inline-flex; }
+    .topbar { padding: 18px 20px; }
+    .content { padding: 22px 20px 40px; }
+}
+
+@media (max-width: 575.98px) {
+    .topbar-title h1 { font-size: 1.45rem; }
+    .topbar-title p { display: none; }
+    .profile-text { display: none !important; }
+}

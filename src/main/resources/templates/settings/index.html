@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Settings')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <div class="sidebar-backdrop"></div>
+
+    <main class="main">
+        <header th:replace="~{fragments/layout :: topbar('Settings', 'Your administrator account and library rules')}"></header>
+
+        <div class="content">
+            <div class="settings-grid">
+                <!-- Profile -->
+                <section class="lt-card">
+                    <div class="profile-head mb-4">
+                        <span class="avatar avatar-navy avatar-lg" th:text="${currentAdminInitials}">LA</span>
+                        <div>
+                            <div class="small-caps" th:text="${admin.role}">ADMIN</div>
+                            <h2 th:text="${admin.fullName ?: 'Administrator'}">Library Admin</h2>
+                            <div class="meta" th:text="${admin.email}">admin@libratrack.com</div>
+                        </div>
+                    </div>
+                    <form th:action="@{/settings/profile}" method="post">
+                        <label class="form-label" for="fullName">Display name</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="fullName" name="fullName" class="form-control" maxlength="120"
+                                   th:value="${admin.fullName}" required>
+                            <button type="submit" class="btn btn-navy" data-loading-text="Saving...">Save</button>
+                        </div>
+                        <div class="form-text">Shown in the top bar.</div>
+                    </form>
+                </section>
+
+                <!-- Password -->
+                <section class="lt-card">
+                    <h2 class="lt-card-title mb-1">Change password</h2>
+                    <p class="text-muted-2 small mb-3">Passwords are stored as secure BCrypt hashes.</p>
+                    <div th:if="${passwordError}" class="form-error-box mb-3">
+                        <i class="bi bi-exclamation-circle"></i><span th:text="${passwordError}">Error</span>
+                    </div>
+                    <form th:action="@{/settings/password}" method="post" autocomplete="off">
+                        <div class="mb-3">
+                            <label class="form-label" for="currentPassword">Current password</label>
+                            <div class="input-icon">
+                                <i class="bi bi-lock"></i>
+                                <input type="password" id="currentPassword" name="currentPassword" class="form-control" required>
+                                <button type="button" class="toggle-password" data-toggle-password="currentPassword"
+                                        aria-label="Show password"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="newPassword">New password</label>
+                                <input type="password" id="newPassword" name="newPassword" class="form-control"
+                                       th:attr="minlength=${minPasswordLength}" required>
+                                <div class="form-text" th:text="'At least ' + ${minPasswordLength} + ' characters.'">At least 6</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="confirmPassword">Confirm new password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-terracotta" data-loading-text="Updating...">
+                            <i class="bi bi-shield-lock me-1"></i>Update password</button>
+                    </form>
+                </section>
+
+                <!-- Rules -->
+                <section class="lt-card">
+                    <h2 class="lt-card-title mb-3">Library rules</h2>
+                    <ul class="info-list">
+                        <li><span class="label">Maximum books per member</span><span class="value" th:text="${maxLoans}">3</span></li>
+                        <li><span class="label">Default loan period</span><span class="value" th:text="${loanDays} + ' days'">14 days</span></li>
+                        <li><span class="label">Overdue fine</span><span class="value" th:text="'₹' + ${finePerDay} + ' per day'">₹5 per day</span></li>
+                        <li><span class="label">Fine formula</span><span class="value">Overdue days × ₹5</span></li>
+                        <li><span class="label">"Low stock" badge</span><span class="value" th:text="${lowStockThreshold} + ' or fewer copies on shelf'">2</span></li>
+                    </ul>
+                    <p class="small text-muted-2 mt-3 mb-0">These rules are enforced by the service layer and covered by the JUnit test suite.</p>
+                </section>
+
+                <!-- System -->
+                <section class="lt-card">
+                    <h2 class="lt-card-title mb-3">System</h2>
+                    <ul class="info-list">
+                        <li><span class="label">Database</span><span class="value">H2 (file: ./data/libratrack)</span></li>
+                        <li><span class="label">Database console</span><span class="value"><a th:href="@{/h2-console}" target="_blank" rel="noopener">Open H2 console</a></span></li>
+                        <li><span class="label">JDBC URL</span><span class="value mono small">jdbc:h2:file:./data/libratrack</span></li>
+                        <li><span class="label">Stack</span><span class="value">Spring Boot 3 · Java 17 · Thymeleaf</span></li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<div th:replace="~{fragments/layout :: confirmModal}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
