@@ -1,0 +1,207 @@
+# LibraTrack – Smart Library Management System
+
+A web-based Smart Library Management System developed using Java Spring Boot. LibraTrack simplifies library operations by managing books, members, book circulation, overdue fines, transactions, and reports through a modern dashboard.
+
+## 1. Project Overview
+
+LibraTrack is designed to digitize traditional library operations. It provides an easy-to-use interface for administrators to manage library resources, track issued books, monitor returns, and calculate overdue fines automatically.
+
+## 2. Key Features
+
+- Admin Login and Authentication
+- Dashboard with live statistics
+- Book Management (Add, Edit, Delete, Search)
+- Member Management
+- Issue and Return Books
+- Automatic Due Date Tracking
+- Automatic Overdue Fine Calculation
+- Transaction History
+- Reports and Analytics
+- Search and Filtering
+- Input Validation and Error Handling
+
+## 3. Technologies Used
+
+### Backend
+- Java 17
+- Spring Boot 3.3.5
+- Spring MVC
+- Spring Data JPA
+- Hibernate
+- Spring Security
+
+### Frontend
+- Thymeleaf
+- HTML5
+- CSS3
+- Bootstrap 5
+- JavaScript
+
+### Database
+- H2 Database
+
+### Testing and Build Tools
+- JUnit 5
+- Mockito
+- Spring Boot Test
+- MockMvc
+- Apache Maven
+
+## 4. System Requirements
+
+Before running the project, install:
+
+- Java Development Kit (JDK 17)
+- Apache Maven 3.9 or later
+- Visual Studio Code or IntelliJ IDEA
+- A modern web browser
+
+Verify the installations:
+
+```bash
+java -version
+mvn -version
+```
+
+## 5. Project Structure
+
+```text
+LibraTrack/
+│
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── Application source code
+│   │   └── resources/
+│   │       ├── templates/
+│   │       ├── static/
+│   │       └── application.properties
+│   │
+│   └── test/
+│       └── Java test classes
+│
+├── docs/
+│   ├── AGILE.md
+│   └── SRS.md
+│
+├── pom.xml
+├── README.md
+└── .gitignore
+```
+
+## 6. How to Run the Project
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/Gunveers-dev/Agile-Case-Study.git
+```
+
+### Step 2: Open the Project Folder
+
+```bash
+cd Agile-Case-Study
+```
+
+If the application is inside a nested `libratrack` folder:
+
+```bash
+cd libratrack
+```
+
+Make sure the current directory contains `pom.xml`.
+
+### Step 3: Run the Application
+
+```bash
+mvn spring-boot:run
+```
+
+### Step 4: Open the Application
+
+Open your browser and visit:
+
+http://localhost:8080
+
+## 7. Demo Login Credentials
+
+Use the following credentials if the demo account is configured:
+
+- Email: admin@libratrack.com
+- Password: admin123
+
+## 8. Database Configuration
+
+LibraTrack uses H2 file-based database storage.
+
+Database connection details:
+
+- Database: H2
+- JDBC URL: jdbc:h2:file:./data/libratrack
+- Username: sa
+- Password: (empty)
+
+H2 Console:
+
+http://localhost:8080/h2-console
+
+## 9. Business Rules
+
+- A member can borrow a maximum of 3 active books.
+- Default borrowing period is 14 days.
+- Overdue fine is ₹5 per day.
+- Only available books can be issued.
+- A book's available quantity decreases when issued.
+- A book's available quantity increases when returned.
+- Duplicate ISBN entries are not allowed.
+- Members cannot borrow the same title twice while it is already issued to them.
+
+## 10. Running Tests
+
+Execute all automated tests using:
+
+```bash
+mvn clean test
+```
+
+To build the project:
+
+```bash
+mvn clean package
+```
+
+To run the generated JAR file:
+
+```bash
+java -jar target/libratrack-1.0.0.jar
+```
+
+## 11. Agile Development Methodology
+
+The project follows Scrum-inspired Agile development practices.
+
+Development was divided into the following stages:
+
+- Sprint 0: Project setup and planning
+- Sprint 1: Authentication and management modules
+- Sprint 2: Book circulation and issuing
+- Sprint 3: Returns, fines, and transaction history
+- Sprint 4: Dashboard, reports, testing, and improvements
+
+## 12. Future Enhancements
+
+- Student self-service portal
+- Email notifications for due dates
+- Barcode-based book scanning
+- Online book reservations
+- Cloud database integration
+- Multi-library support
+
+## 13. Project Team
+
+- Khushdeep Nandiwal
+- Gunveer Singh
+
+---
+
+**LibraTrack – Making Library Management Smarter and Simpler.**
